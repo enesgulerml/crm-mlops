@@ -1,0 +1,15 @@
+base:
+  random_state: 42
+  test_size: 0.2
+
+data:
+  source: "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
+  target_col: "Churn"
+
+model:
+  name: "xgboost"
+  output_path: "models/churn_model.onnx"
+
+training:
+  n_trials: 10
+  cv: 3
