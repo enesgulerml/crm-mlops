@@ -1,0 +1,15 @@
+base:
+  project_name: "crm-mlops"
+  random_state: 42
+  test_size: 0.2
+
+data_ingestion:
+  drive_file_id: "1K_yDMbacLq6hUsxUHfgFDazGFF967cC6"
+  local_data_path: "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
+  unzip_dir: "data/raw"
+
+model_trainer:
+  model_name: "xgboost"
+  output_path: "models/churn_model.onnx"
+  n_trials: 5
+  cv: 3
