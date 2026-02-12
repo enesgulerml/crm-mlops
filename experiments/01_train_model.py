@@ -20,13 +20,12 @@ from skl2onnx.common.shape_calculator import calculate_linear_classifier_output_
 from onnxmltools.convert.xgboost.operator_converters.XGBoost import convert_xgboost
 
 
-# --- CONFIG LOADING (GÜNCELLENDİ) ---
+# --- CONFIG LOADING ---
 def load_config():
-    # Artık config klasörüne bakıyor
     config_path = "config/params.yaml"
 
     if not os.path.exists(config_path):
-        raise FileNotFoundError(f"Konfigürasyon dosyası bulunamadı: {config_path}")
+        raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
     with open(config_path, "r") as f:
         return yaml.safe_load(f)
@@ -49,9 +48,9 @@ except Exception:
 
 # --- DATA ---
 def load_and_clean_data(filepath):
-    print(f"⏳ Veri yükleniyor: {filepath}")
+    print(f"Loading data: {filepath}")
     if not os.path.exists(filepath):
-        raise FileNotFoundError(f"Veri dosyası bulunamadı: {filepath}")
+        raise FileNotFoundError(f"Data file not found: {filepath}")
 
     df = pd.read_csv(filepath)
     if 'customerID' in df.columns: df = df.drop(['customerID'], axis=1)
@@ -113,12 +112,12 @@ def objective(trial, X, y, preprocessor):
 # --- MAIN ---
 def main():
     # 1. Prep
-    print(f"📂 Konfigürasyon yüklendi: config/params.yaml")
+    print(f"Configuration loaded: config/params.yaml")
     df = load_and_clean_data(params['data']['source'])
     df = feature_engineering(df)
 
     target_col = params['data']['target_col']
-    print(f"🔨 Hedef ({target_col}) encode ediliyor...")
+    print(f"Encoding the target ({target_col})...")
     df[target_col] = LabelEncoder().fit_transform(df[target_col].astype(str))
 
     X = df.drop(target_col, axis=1)
@@ -128,31 +127,31 @@ def main():
 
     # 2. Train
     preprocessor, cat_cols = get_pipeline(X_train)
-    print("🔍 Optuna çalışıyor...")
+    print("Optuna is working...")
     study = optuna.create_study(direction='maximize')
     study.optimize(lambda t: objective(t, X_train, y_train, preprocessor), n_trials=params['training']['n_trials'])
 
-    print("🚀 Final Model...")
+    print("Final Model...")
     final_model = xgb.XGBClassifier(**study.best_trial.params, random_state=42)
     pipeline = Pipeline(steps=[('preprocessor', preprocessor), ('classifier', final_model)])
     pipeline.fit(X_train, y_train)
 
     # 3. Evaluation
     print("\n" + "=" * 40)
-    print("📊 MODEL PERFORMANS RAPORU")
+    print("MODEL PERFORMANCE REPORT")
     print("=" * 40)
     y_pred = pipeline.predict(X_test)
     y_prob = pipeline.predict_proba(X_test)[:, 1]
 
-    print(f"✅ Accuracy:  {accuracy_score(y_test, y_pred):.4f}")
-    print(f"⭐ AUC Score: {roc_auc_score(y_test, y_prob):.4f}")
+    print(f"Accuracy:  {accuracy_score(y_test, y_pred):.4f}")
+    print(f"AUC Score: {roc_auc_score(y_test, y_prob):.4f}")
     print("-" * 30)
     print(classification_report(y_test, y_pred))
     print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
     print("=" * 40 + "\n")
 
     # 4. Export
-    print("💾 ONNX Export...")
+    print("ONNX Export...")
     os.makedirs(os.path.dirname(params['model']['output_path']), exist_ok=True)
     initial_types = [(c, StringTensorType([None, 1])) if c in cat_cols else (c, FloatTensorType([None, 1])) for c in
                      X.columns]
@@ -163,10 +162,10 @@ def main():
             f.write(onnx_model.SerializeToString())
 
         size_kb = os.path.getsize(params['model']['output_path']) / 1024
-        print(f"✅ BAŞARILI! Kayıt: {params['model']['output_path']}")
-        print(f"📦 Model Boyutu: {size_kb:.2f} KB")
+        print(f"SUCCESSFUL! Registration: {params['model']['output_path']}")
+        print(f"Model Size: {size_kb:.2f} KB")
     except Exception as e:
-        print(f"❌ Hata: {e}")
+        print(f"ERROR: {e}")
 
 
 if __name__ == "__main__":
