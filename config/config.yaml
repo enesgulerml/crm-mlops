@@ -13,3 +13,8 @@ model_trainer:
   output_path: "models/churn_model.onnx"
   n_trials: 5
   cv: 3
+
+data_transformation:
+  root_dir: "data/processed"
+  data_path: "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
+  preprocessor_obj_file_path: "models/preprocessor.pkl"

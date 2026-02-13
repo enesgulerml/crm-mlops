@@ -1,6 +1,7 @@
 import os
 import yaml
 import sys
+import pickle
 from src.utils.exception import CustomException
 from src.utils.logger import get_logger
 
@@ -25,6 +26,22 @@ def load_config():
             content = yaml.safe_load(f)
             
         return content
+
+    except Exception as e:
+        raise CustomException(e, sys)
+    
+def save_object(file_path, obj):
+    """
+    Python objesini (Preprocessor, Model vb.) pickle olarak kaydeder.
+    """
+    try:
+        dir_path = os.path.dirname(file_path)
+        os.makedirs(dir_path, exist_ok=True)
+
+        with open(file_path, "wb") as file_obj:
+            pickle.dump(obj, file_obj)
+            
+        logger.info(f"Obje kaydedildi: {file_path}")
 
     except Exception as e:
         raise CustomException(e, sys)
