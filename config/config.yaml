@@ -11,7 +11,7 @@ data_ingestion:
 model_trainer:
   model_name: "xgboost"
   output_path: "models/churn_model.onnx"
-  n_trials: 5
+  n_trials: 50
   cv: 3
 
 data_transformation:
