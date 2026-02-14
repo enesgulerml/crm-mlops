@@ -33,3 +33,6 @@ models/
 # --- Logs ---
 *.log
 logs/
+
+# --- Environment Variables ---
+.env
